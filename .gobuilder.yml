@@ -1,5 +1,0 @@
-build_matrix:
-    windows:
-    osx:
-    linux/amd64:
-    
