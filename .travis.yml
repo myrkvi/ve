@@ -9,3 +9,5 @@ go_import_path: github.com/vegberg/ve
 install:
     - go get github.com/docopt/docopt-go
     - go get github.com/mattn/go-sqlite3
+
+script: go build
