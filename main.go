@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os/user"
 
+	"github.com/elgris/sqrl"
+
 	"github.com/docopt/docopt-go"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -86,7 +88,7 @@ func initDb(conn *sql.DB) error {
 }
 
 func lookupWord(q string, conn *sql.DB, tbl string) (int, string, string) {
-	res, err := conn.Query("SELECT * FROM ? WHERE Word='?';", tbl, q)
+	res, err := sqrl.Select("*").From(tbl).Where("Word = ?", q).RunWith(conn).Query()
 	if err != nil {
 		panic(err)
 	}
@@ -100,7 +102,6 @@ func lookupWord(q string, conn *sql.DB, tbl string) (int, string, string) {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(ID, Word, Class)
 	}
 
 	return ID, Word, Class
@@ -109,4 +110,32 @@ func lookupWord(q string, conn *sql.DB, tbl string) (int, string, string) {
 func lookupWordNat(q string, conn *sql.DB) {
 	IDN, WordN, ClassN := lookupWord(q, conn, "Natlang")
 	fmt.Println(IDN, WordN, ClassN)
+
+	relRes, err := sqrl.Select("*").From("Conlang_Natlang_relation").Where("Natlang_Id = ?", IDN).RunWith(conn).Query()
+	if err != nil {
+		panic(err)
+	}
+
+	var IDRel, IDC string
+
+	for relRes.Next() {
+		err = relRes.Scan(&IDRel, &IDC, &IDN)
+		if err != nil {
+			panic(err)
+		}
+
+		conRes, err := sqrl.Select("*").From("Conlang").Where("Id = ?", IDC).RunWith(conn).Query()
+
+		var WordC, IpaC, ClassC, DescriptionC string
+
+		for conRes.Next() {
+			err = conRes.Scan(&IDC, &WordC, &IpaC, &ClassC, &DescriptionC)
+			if err != nil {
+				panic(err)
+			}
+
+			fmt.Println(IDC, WordC, IpaC, ClassC, DescriptionC)
+		}
+	}
+
 }
