@@ -3,7 +3,10 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os/user"
+	"strconv"
+	"strings"
 
 	"github.com/elgris/sqrl"
 
@@ -13,20 +16,32 @@ import (
 
 var dataDir string
 
+//DictionaryEntry holds information from a row in the database.
+type DictionaryEntry struct {
+	ID           int
+	Word         string
+	IPA          string
+	Class        string
+	Description  string
+	Translations []DictionaryEntry
+}
+
 const usage string = `
 Vé version 0.0.1
 
 Usage:
-	ve lookup <word>
+	ve lookup [-c|-n] <word>
 	ve define <word>
 	ve modify <word>
 	ve link	  <word>
 	ve remove <word>
+	ve -h | --help
 
 Options:
-	-h --help			Shows this help text.`
+	-h --help  Shows this help text.`
 
 func main() {
+	log.Println("Entered main function")
 	currUser, _ := user.Current()
 	dataDir = currUser.HomeDir + "/.ve/"
 
@@ -40,11 +55,22 @@ func main() {
 		panic(err)
 	}
 
-	args, _ := docopt.Parse(usage, nil, true, "0.0.1", false, true)
+	args, err := docopt.Parse(usage, nil, true, "0.0.1", false, true)
+	if err != nil {
+		panic(err)
+	}
 
 	switch true {
 	case args["lookup"]:
-		lookupWordNat(args["<word>"].(string), conn)
+		if args["-n"].(bool) {
+			lookupWordNat(args["<word>"].(string), conn)
+		} else if args["-c"].(bool) {
+			//TODO: add lookupWordCon()
+		} else {
+			fmt.Println("===== Results from Natlang dictionary =====")
+			lookupWordNat(args["<word>"].(string), conn)
+			//TODO: add lookupWordCon()
+		}
 
 	case args["define"]:
 		//TODO: Add functionality.
@@ -87,54 +113,90 @@ func initDb(conn *sql.DB) error {
 	return err
 }
 
-func lookupWord(q string, conn *sql.DB, tbl string) (int, string, string) {
+func lookupWord(q string, conn *sql.DB, tbl string) []DictionaryEntry {
 	res, err := sqrl.Select("*").From(tbl).Where("Word = ?", q).RunWith(conn).Query()
 	if err != nil {
 		panic(err)
 	}
 
-	var ID int
-	var Word string
-	var Class string
+	var dictionaryEntries []DictionaryEntry
 
 	for res.Next() {
-		err = res.Scan(&ID, &Word, &Class)
+		x := DictionaryEntry{}
+		err = res.Scan(&x.ID, &x.Word, &x.Class)
 		if err != nil {
 			panic(err)
 		}
+
+		dictionaryEntries = append(dictionaryEntries, x)
 	}
 
-	return ID, Word, Class
+	return dictionaryEntries
 }
 
 func lookupWordNat(q string, conn *sql.DB) {
-	IDN, WordN, ClassN := lookupWord(q, conn, "Natlang")
-	fmt.Println(IDN, WordN, ClassN)
+	dictionaryEntriesNat := lookupWord(q, conn, "Natlang")
 
-	relRes, err := sqrl.Select("*").From("Conlang_Natlang_relation").Where("Natlang_Id = ?", IDN).RunWith(conn).Query()
-	if err != nil {
-		panic(err)
-	}
-
-	var IDRel, IDC string
-
-	for relRes.Next() {
-		err = relRes.Scan(&IDRel, &IDC, &IDN)
+	for _, entry := range dictionaryEntriesNat {
+		/*q := sqrl.Select("Conlang_Id").From("Conlang_Natlang_relation").Where("Natlang_Id = ?", entry.ID)
+		fmt.Println(q.ToSql())
+		relRes, err := q.RunWith(conn).Query()*/
+		relRes, err := conn.Query("SELECT Conlang_Id FROM Conlang_Natlang_relation WHERE Natlang_Id = ?", entry.ID)
 		if err != nil {
 			panic(err)
 		}
 
-		conRes, err := sqrl.Select("*").From("Conlang").Where("Id = ?", IDC).RunWith(conn).Query()
+		var IDC []int
 
-		var WordC, IpaC, ClassC, DescriptionC string
-
-		for conRes.Next() {
-			err = conRes.Scan(&IDC, &WordC, &IpaC, &ClassC, &DescriptionC)
+		for relRes.Next() {
+			var x int
+			err = relRes.Scan(&x)
 			if err != nil {
 				panic(err)
 			}
 
-			fmt.Println(IDC, WordC, IpaC, ClassC, DescriptionC)
+			IDC = append(IDC, x)
+			var IDCs []string
+
+			for _, v := range IDC {
+				IDCs = append(IDCs, strconv.Itoa(v))
+			}
+			IDCstring := strings.Join(IDCs, ",")
+			fmt.Println(IDCstring)
+
+			/*q := sqrl.Select("*").From("Conlang").Where("Id = ?", IDCstring)
+
+			fmt.Println(q.ToSql())
+
+			conRes, err := q.RunWith(conn).Query()*/
+			conRes, err := conn.Query("SELECT * FROM Conlang WHERE Id = ?", IDCstring)
+			if err != nil {
+				panic(err)
+			}
+
+			var dictionaryEntriesCon []DictionaryEntry
+
+			for conRes.Next() {
+				var x DictionaryEntry
+				err = conRes.Scan(&x.ID, &x.Word, &x.IPA, &x.Class, &x.Description)
+
+				if err != nil {
+					panic(err)
+				}
+
+				dictionaryEntriesCon = append(dictionaryEntriesCon, x)
+
+			}
+
+			entry.Translations = dictionaryEntriesCon
+		}
+	}
+
+	for i, natEntry := range dictionaryEntriesNat {
+		fmt.Printf("(%d.) -- %s    %s --\n", i, natEntry.Word, natEntry.Class)
+
+		for i, translation := range natEntry.Translations {
+			fmt.Printf("\t(%d.) %s [%s]    %s\n\t\t%s", i, translation.Word, translation.IPA, translation.Class, translation.Description)
 		}
 	}
 
