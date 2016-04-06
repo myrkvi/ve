@@ -61,11 +61,12 @@ func main() {
 		if args["-n"].(bool) {
 			lookupWordNat(args["<word>"].(string), conn)
 		} else if args["-c"].(bool) {
-			//TODO: add lookupWordCon()
+			lookupWordCon(args["<word>"].(string), conn)
 		} else {
 			fmt.Println("===== Results from Natlang dictionary =====")
 			lookupWordNat(args["<word>"].(string), conn)
-			//TODO: add lookupWordCon()
+			fmt.Println("\n===== Results from Conlang dictionary =====")
+			lookupWordCon(args["<word>"].(string), conn)
 		}
 
 	case args["define"]:
