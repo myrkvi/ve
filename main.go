@@ -189,6 +189,8 @@ func lookupWordNat(q string, conn *sql.DB) {
 			}
 
 			entry.Translations = dictionaryEntriesCon
+			fmt.Println(entry)
+
 		}
 	}
 
