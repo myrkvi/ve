@@ -137,6 +137,7 @@ func lookupWord(q string, conn *sql.DB, tbl string) []DictionaryEntry {
 func lookupWordNat(q string, conn *sql.DB) {
 	dictionaryEntriesNat := lookupWord(q, conn, "Natlang")
 
+	//THE ISSUE IS HERE AND YOU ARE A DUMB MOTHERFUCKER, VEGARD.
 	for _, entry := range dictionaryEntriesNat {
 		/*q := sqrl.Select("Conlang_Id").From("Conlang_Natlang_relation").Where("Natlang_Id = ?", entry.ID)
 		fmt.Println(q.ToSql())
