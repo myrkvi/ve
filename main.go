@@ -136,6 +136,7 @@ func lookupWord(q string, conn *sql.DB, tbl string) []DictionaryEntry {
 
 func lookupWordNat(q string, conn *sql.DB) {
 	dictionaryEntriesNat := lookupWord(q, conn, "Natlang")
+	var entries []DictionaryEntry
 
 	//THE ISSUE IS HERE AND YOU ARE A DUMB MOTHERFUCKER, VEGARD.
 	for _, entry := range dictionaryEntriesNat {
@@ -190,16 +191,16 @@ func lookupWordNat(q string, conn *sql.DB) {
 			}
 
 			entry.Translations = dictionaryEntriesCon
-			fmt.Println(entry)
+			entries = append(entries, entry)
 
 		}
 	}
 
-	for i, natEntry := range dictionaryEntriesNat {
-		fmt.Printf("(%d.) -- %s    %s --\n", i, natEntry.Word, natEntry.Class)
+	for i, natEntry := range entries {
+		fmt.Printf("(%d.) -- %s    %s --\n", i+1, natEntry.Word, natEntry.Class)
 
 		for i, translation := range natEntry.Translations {
-			fmt.Printf("\t(%d.) %s [%s]    %s\n\t\t%s", i, translation.Word, translation.IPA, translation.Class, translation.Description)
+			fmt.Printf("\t(%d.) %s [%s]    %s\n\t\t%s", i+1, translation.Word, translation.IPA, translation.Class, translation.Description)
 		}
 	}
 
