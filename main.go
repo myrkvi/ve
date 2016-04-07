@@ -34,7 +34,9 @@ Usage:
 	ve -h | --help
 
 Options:
-	-h --help  Shows this help text.`
+	-h --help  	Shows this help text.
+	-c  		Search only in the Conlang dictionary.
+	-n  		Search only in the Natlang dictionary.`
 
 func main() {
 	log.Println("Entered main function")
