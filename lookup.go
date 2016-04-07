@@ -10,7 +10,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func lookupWord(q string, conn *sql.DB, tbl string) []DictionaryEntry {
+//LookupWord looks up a word in the specified table and returns a DictionaryEntry slice.
+func LookupWord(q string, conn *sql.DB, tbl string) []DictionaryEntry {
 	res, err := sqrl.Select("*").From(tbl).Where("Word = ?", q).RunWith(conn).Query()
 	if err != nil {
 		panic(err)
@@ -31,8 +32,9 @@ func lookupWord(q string, conn *sql.DB, tbl string) []DictionaryEntry {
 	return dictionaryEntries
 }
 
-func lookupWordNat(q string, conn *sql.DB) {
-	dictionaryEntriesNat := lookupWord(q, conn, "Natlang")
+//LookupWordNat looks up words matching q, finds matching words from Conlang and lists them.
+func LookupWordNat(q string, conn *sql.DB) {
+	dictionaryEntriesNat := LookupWord(q, conn, "Natlang")
 	var entries []DictionaryEntry
 
 	//THE ISSUE IS HERE AND YOU ARE A DUMB MOTHERFUCKER, VEGARD.
@@ -62,12 +64,7 @@ func lookupWordNat(q string, conn *sql.DB) {
 			}
 			IDCstring := strings.Join(IDCs, ",")
 
-			/*q := sqrl.Select("*").From("Conlang").Where("Id = ?", IDCstring)
-
-			fmt.Println(q.ToSql())
-
-			conRes, err := q.RunWith(conn).Query()*/
-			conRes, err := conn.Query("SELECT * FROM Conlang WHERE Id = ?", IDCstring)
+			conRes, err := conn.Query("SELECT * FROM Conlang WHERE Id IN (?)", IDCstring)
 			if err != nil {
 				panic(err)
 			}
@@ -93,17 +90,18 @@ func lookupWordNat(q string, conn *sql.DB) {
 	}
 
 	for i, natEntry := range entries {
-		fmt.Printf("(%d.) -- %s    %s --\n", i+1, natEntry.Word, natEntry.Class)
+		fmt.Printf("(%d.) -- %s    %s --\n\t%s\n\tID: %d\n", i+1, natEntry.Word, natEntry.Class, natEntry.Description, natEntry.ID)
 
 		for i, translation := range natEntry.Translations {
-			fmt.Printf("\t(%d.) %s [%s]    %s\n\t\t%s", i+1, translation.Word, translation.IPA, translation.Class, translation.Description)
+			fmt.Printf("\t(%d.) %s [%s]    %s\n\t\t%s\n\t\tID: %d\n", i+1, translation.Word, translation.IPA, translation.Class, translation.Description, translation.ID)
 		}
 	}
 
 }
 
-func lookupWordCon(q string, conn *sql.DB) {
-	dictionaryEntriesCon := lookupWord(q, conn, "Conlang")
+//LookupWordCon looks up words matching q, finds matching words from Natlang and lists them.
+func LookupWordCon(q string, conn *sql.DB) {
+	dictionaryEntriesCon := LookupWord(q, conn, "Conlang")
 	var entries []DictionaryEntry
 
 	for _, entry := range dictionaryEntriesCon {
@@ -129,7 +127,7 @@ func lookupWordCon(q string, conn *sql.DB) {
 			}
 			IDNstring := strings.Join(IDNs, ",")
 
-			natRes, err := conn.Query("SELECT * FROM Natlang WHERE Id = ?", IDNstring)
+			natRes, err := conn.Query("SELECT * FROM Natlang WHERE Id IN (?)", IDNstring)
 			if err != nil {
 				panic(err)
 			}
@@ -155,10 +153,10 @@ func lookupWordCon(q string, conn *sql.DB) {
 	}
 
 	for i, conEntry := range entries {
-		fmt.Printf("(%d.) -- %s [%s]    %s --\n\t%s\n", i+1, conEntry.Word, conEntry.IPA, conEntry.Class, conEntry.Description)
+		fmt.Printf("(%d.) -- %s [%s]    %s --\n\t%s\n\tID: %d\n", i+1, conEntry.Word, conEntry.IPA, conEntry.Class, conEntry.Description, conEntry.ID)
 
 		for i, translation := range conEntry.Translations {
-			fmt.Printf("\t(%d.) %s    %s\n\t\t%s", i+1, translation.Word, translation.Class, translation.Description)
+			fmt.Printf("\t(%d.) %s    %s\n\t\t%s\n\t\tID: %d\n", i+1, translation.Word, translation.Class, translation.Description, translation.ID)
 		}
 	}
 
