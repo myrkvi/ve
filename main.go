@@ -27,14 +27,16 @@ Vé version 0.0.1
 
 Usage:
 	ve lookup [-c|-n] <word>
-	ve define <word>
-	ve modify <word>
-	ve link	  <word>
-	ve remove <word>
+	ve define (-c|-n) <word> [ipa] [class] [description]
+	ve modify (-c|-n) <id> <word> [ipa] [class] [description]
+	ve link <n-id> <c-id>
+	ve remove (-c|-n) <id>
 	ve -h | --help
 
 Options:
-	-h --help  Shows this help text.`
+	-h --help  	Shows this help text.
+	-c  		Apply this to the Conlang list.
+	-n  		Apply this to the Natlang list.`
 
 func main() {
 	log.Println("Entered main function")
@@ -59,14 +61,14 @@ func main() {
 	switch true {
 	case args["lookup"]:
 		if args["-n"].(bool) {
-			lookupWordNat(args["<word>"].(string), conn)
+			LookupWordNat(args["<word>"].(string), conn)
 		} else if args["-c"].(bool) {
-			lookupWordCon(args["<word>"].(string), conn)
+			LookupWordCon(args["<word>"].(string), conn)
 		} else {
 			fmt.Println("===== Results from Natlang dictionary =====")
-			lookupWordNat(args["<word>"].(string), conn)
+			LookupWordNat(args["<word>"].(string), conn)
 			fmt.Println("\n===== Results from Conlang dictionary =====")
-			lookupWordCon(args["<word>"].(string), conn)
+			LookupWordCon(args["<word>"].(string), conn)
 		}
 
 	case args["define"]:
@@ -96,7 +98,9 @@ func initDb(conn *sql.DB) error {
 		CREATE TABLE IF NOT EXISTS Natlang (
 			Id INTEGER NOT NULL PRIMARY KEY,
 			Word TEXT,
-			Class TEXT
+			Ipa TEXT,
+			Class TEXT,
+			Description TEXT
 		);
 
 		CREATE TABLE IF NOT EXISTS Conlang_Natlang_relation (
