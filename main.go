@@ -26,9 +26,8 @@ Vé version 0.0.1
 
 Usage:
 	ve lookup [-c|-n] <word>
-	ve define -c <word> [ipa] [class] [description]
-	ve define -n <word> [class] [description]
-	ve modify (-c|-n) <id> <word> [ipa] [class] [description]
+	ve define (-c|-n) <word> [<class>] [<description>] [<ipa>]
+	ve modify (-c|-n) <id> <word> [<class>] [<description>] [<ipa>]
 	ve link <n-id> <c-id>
 	ve unlink <n-id> <c-id>
 	ve remove (-c|-n) <id>
@@ -47,6 +46,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer conn.Close()
 
 	err = initDb(conn)
 	if err != nil {
@@ -87,9 +87,9 @@ func main() {
 		//TODO: Add functionality.
 
 	case args["link"]:
-		LinkWords(args["<n-id>"].(int), args["<c-id>"].(int), conn)
+		LinkWords(args["<n-id>"].(string), args["<c-id>"].(string), conn)
 	case args["unlink"]:
-		UnlinkWords(args["<n-id>"].(int), args["<c-id>"].(int), conn)
+		UnlinkWords(args["<n-id>"].(string), args["<c-id>"].(string), conn)
 
 	case args["remove"]:
 		//TODO: Add functionality.
