@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"os/user"
 
 	"github.com/docopt/docopt-go"
@@ -27,9 +26,11 @@ Vé version 0.0.1
 
 Usage:
 	ve lookup [-c|-n] <word>
-	ve define (-c|-n) <word> [ipa] [class] [description]
+	ve define -c <word> [ipa] [class] [description]
+	ve define -n <word> [class] [description]
 	ve modify (-c|-n) <id> <word> [ipa] [class] [description]
 	ve link <n-id> <c-id>
+	ve unlink <n-id> <c-id>
 	ve remove (-c|-n) <id>
 	ve -h | --help
 
@@ -39,7 +40,6 @@ Options:
 	-n  		Apply this to the Natlang list.`
 
 func main() {
-	log.Println("Entered main function")
 	currUser, _ := user.Current()
 	dataDir = currUser.HomeDir + "/.ve/"
 
@@ -72,13 +72,24 @@ func main() {
 		}
 
 	case args["define"]:
-		//TODO: Add functionality.
+		word := args["<word>"].(string)
+		class := args["<class>"].(string)
+		description := args["<description>"].(string)
+
+		if args["-n"].(bool) {
+			AddNatlangEntry(word, class, description, conn)
+		} else if args["-c"].(bool) {
+			ipa := args["<ipa>"].(string)
+			AddConlangEntry(word, ipa, class, description, conn)
+		}
 
 	case args["modify"]:
 		//TODO: Add functionality.
 
 	case args["link"]:
-		//TODO: Add functionality.
+		LinkWords(args["<n-id>"].(int), args["<c-id>"].(int), conn)
+	case args["unlink"]:
+		UnlinkWords(args["<n-id>"].(int), args["<c-id>"].(int), conn)
 
 	case args["remove"]:
 		//TODO: Add functionality.
