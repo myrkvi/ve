@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os/user"
 
 	"github.com/docopt/docopt-go"
@@ -77,8 +78,10 @@ func main() {
 		description := args["<description>"].(string)
 
 		if args["-n"].(bool) {
+			log.Println("Defining new word in Natlang dictionary.")
 			AddNatlangEntry(word, class, description, conn)
 		} else if args["-c"].(bool) {
+			log.Println("Defining new word in Conlang dictionary.")
 			ipa := args["<ipa>"].(string)
 			AddConlangEntry(word, ipa, class, description, conn)
 		}

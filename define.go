@@ -3,17 +3,26 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 )
 
 //AddEntry adds a dictionary entry to the table adn database specified.
 func AddEntry(word string, ipa string, class string, description string, conn *sql.DB, tbl string) int {
-	resAdd, err := conn.Query("INSERT INTO " + tbl + " VALUES (NULL, '" + word + "', '" + ipa + "', '" + class + "', '" + description + "'); SELECT last_insert_rowid();")
+	log.Printf("Adding data to table %s.", tbl)
+	result, err := conn.Exec("INSERT INTO " + tbl + " VALUES (NULL, '" + word + "', '" + ipa + "', '" + class + "', '" + description + "');")
 	if err != nil {
 		panic(err)
 	}
-	var id int
-	resAdd.Scan(&id)
-	return id
+
+	/*resAdd, err := conn.Query(" SELECT last_insert_rowid();")
+	if err != nil {
+		panic(err)
+	}*/
+	id, err := result.LastInsertId()
+	if err != nil {
+		panic(err)
+	}
+	return int(id)
 }
 
 //AddConlangEntry adds an entry to the Conlang table, to later be linked with Natlang entries.
