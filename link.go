@@ -8,7 +8,7 @@ import (
 //LinkWords adds a new link between a Conlang word and a Natlang word, to display
 //them together in search queries.
 func LinkWords(natlangID string, conlangID string, conn *sql.DB) {
-	_, err := conn.Query("INSERT INTO Conlang_Natlang_relation VALUES (NULL, " + natlangID + ", " + conlangID + ");")
+	_, err := conn.Exec("INSERT INTO Conlang_Natlang_relation VALUES (NULL, " + natlangID + ", " + conlangID + ");")
 	if err != nil {
 		panic(err)
 	} else {
@@ -26,7 +26,11 @@ func UnlinkWords(natlangID string, conlangID string, conn *sql.DB) {
 	for res.Next() {
 		var id string
 		res.Scan(&id)
+		res.Close()
 
-		conn.Exec("REMOVE FROM Conlang_Natlang_relation WHERE Id=" + id + ";")
+		_, err = conn.Exec("DELETE FROM Conlang_Natlang_relation WHERE Id=" + id + ";")
+		if err != nil {
+			panic(err)
+		}
 	}
 }

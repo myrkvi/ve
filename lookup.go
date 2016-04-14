@@ -37,11 +37,7 @@ func LookupWordNat(q string, conn *sql.DB) {
 	dictionaryEntriesNat := LookupWord(q, conn, "Natlang")
 	var entries []DictionaryEntry
 
-	//THE ISSUE IS HERE AND YOU ARE A DUMB MOTHERFUCKER, VEGARD.
 	for _, entry := range dictionaryEntriesNat {
-		/*q := sqrl.Select("Conlang_Id").From("Conlang_Natlang_relation").Where("Natlang_Id = ?", entry.ID)
-		fmt.Println(q.ToSql())
-		relRes, err := q.RunWith(conn).Query()*/
 		relRes, err := conn.Query("SELECT Conlang_Id FROM Conlang_Natlang_relation WHERE Natlang_Id = ?", entry.ID)
 		if err != nil {
 			panic(err)
@@ -80,13 +76,15 @@ func LookupWordNat(q string, conn *sql.DB) {
 				}
 
 				dictionaryEntriesCon = append(dictionaryEntriesCon, x)
-
 			}
 
 			entry.Translations = dictionaryEntriesCon
 			entries = append(entries, entry)
-
 		}
+	}
+
+	if entries == nil {
+		entries = dictionaryEntriesNat
 	}
 
 	for i, natEntry := range entries {
@@ -150,6 +148,9 @@ func LookupWordCon(q string, conn *sql.DB) {
 			entries = append(entries, entry)
 
 		}
+	}
+	if entries == nil {
+		entries = dictionaryEntriesCon
 	}
 
 	for i, conEntry := range entries {
