@@ -12,7 +12,7 @@ import (
 
 //LookupWord looks up a word in the specified table and returns a DictionaryEntry slice.
 func LookupWord(q string, conn *sql.DB, tbl string) []DictionaryEntry {
-	res, err := sqrl.Select("*").From(tbl).Where("Word = ?", q).RunWith(conn).Query()
+	res, err := sqrl.Select("*").From(tbl).Where("Word LIKE ?", q).RunWith(conn).Query()
 	if err != nil {
 		panic(err)
 	}

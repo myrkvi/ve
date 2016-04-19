@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"os/user"
 
 	"github.com/docopt/docopt-go"
@@ -28,7 +27,7 @@ Vé version 0.0.1
 Usage:
 	ve lookup [-c|-n] <word>
 	ve define (-c|-n) <word> [<class>] [<description>] [<ipa>]
-	ve modify (-c|-n) <id> <word> [<class>] [<description>] [<ipa>]
+	ve modify (-c|-n) <id> [--word=<word>] [--class=<class>] [--description=<description>] [--ipa=<ipa>]
 	ve link <n-id> <c-id>
 	ve unlink <n-id> <c-id>
 	ve remove (-c|-n) <id>
@@ -58,6 +57,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println(args)
 
 	switch true {
 	case args["lookup"]:
@@ -78,16 +78,47 @@ func main() {
 		description := args["<description>"].(string)
 
 		if args["-n"].(bool) {
-			log.Println("Defining new word in Natlang dictionary.")
 			AddNatlangEntry(word, class, description, conn)
 		} else if args["-c"].(bool) {
-			log.Println("Defining new word in Conlang dictionary.")
 			ipa := args["<ipa>"].(string)
 			AddConlangEntry(word, ipa, class, description, conn)
 		}
 
 	case args["modify"]:
-		//TODO: Add functionality.
+		id := args["<id>"].(string)
+
+		var word string
+		if args["--word"] != nil {
+			word = args["--word"].(string)
+		} else {
+			word = ""
+		}
+
+		var class string
+		if args["--class"] != nil {
+			class = args["--class"].(string)
+		} else {
+			class = ""
+		}
+
+		var description string
+		if args["--description"] != nil {
+			description = args["--description"].(string)
+		} else {
+			description = ""
+		}
+
+		if args["-n"].(bool) {
+			ModifyEntry(id, word, class, description, "", conn, "Natlang")
+		} else if args["-c"].(bool) {
+			var ipa string
+			if args["--ipa"] != nil {
+				ipa = args["--ipa"].(string)
+			} else {
+				ipa = ""
+			}
+			ModifyEntry(id, word, class, description, ipa, conn, "Conlang")
+		}
 
 	case args["link"]:
 		LinkWords(args["<n-id>"].(string), args["<c-id>"].(string), conn)
@@ -95,7 +126,11 @@ func main() {
 		UnlinkWords(args["<n-id>"].(string), args["<c-id>"].(string), conn)
 
 	case args["remove"]:
-		//TODO: Add functionality.
+		if args["-n"].(bool) {
+			RemoveEntry(args["<id>"].(string), conn, "Natlang")
+		} else if args["-c"].(bool) {
+			RemoveEntry(args["<id>"].(string), conn, "Conlang")
+		}
 	}
 }
 
