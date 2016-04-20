@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-//AddEntry adds a dictionary entry to the table adn database specified.
+//AddEntry adds a dictionary entry to the table and database specified.
 func AddEntry(word string, ipa string, class string, description string, conn *sql.DB, tbl string) int {
 	log.Printf("Adding data to table %s.", tbl)
 	result, err := conn.Exec("INSERT INTO " + tbl + " VALUES (NULL, '" + word + "', '" + ipa + "', '" + class + "', '" + description + "');")

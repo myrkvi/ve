@@ -1,0 +1,5 @@
+build_matrix:
+    windows:
+    darwin:
+    linux/amd64:
+    linux/386:

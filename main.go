@@ -3,7 +3,9 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"os"
 	"os/user"
+	fp "path/filepath"
 
 	"github.com/docopt/docopt-go"
 	_ "github.com/mattn/go-sqlite3"
@@ -40,9 +42,10 @@ Options:
 
 func main() {
 	currUser, _ := user.Current()
-	dataDir = currUser.HomeDir + "/.ve/"
+	dataDir = fp.Dir(currUser.HomeDir + "/.ve/")
+	fmt.Println(dataDir)
 
-	conn, err := sql.Open("sqlite3", dataDir+"dictionary.db")
+	conn, err := sql.Open("sqlite3", dataDir+"/dictionary.db")
 	if err != nil {
 		panic(err)
 	}
@@ -50,14 +53,15 @@ func main() {
 
 	err = initDb(conn)
 	if err != nil {
-		panic(err)
+		os.Mkdir(dataDir, 0777)
+		fmt.Println("Error: ~/.ve does not exist.\nCreating directory. Please run the application again")
+		os.Exit(1)
 	}
 
 	args, err := docopt.Parse(usage, nil, true, "0.0.1", false, true)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(args)
 
 	switch true {
 	case args["lookup"]:
